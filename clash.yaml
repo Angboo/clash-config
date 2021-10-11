@@ -1,0 +1,220 @@
+port: 7890
+socks-port: 7891
+redir-port: 7892
+allow-lan: false
+mode: rule
+log-level: silent
+external-controller: '0.0.0.0:9090'
+secret: ''
+dns:
+  enable: true
+  ipv6: false
+  listen: '0.0.0.0:53'
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 114.114.114.114
+    - 'tcp://223.5.5.5'
+  fallback:
+    - 'tls://223.5.5.5:853'
+    - 'https://223.5.5.5/dns-query'
+  fallback-filter:
+    geoip: true
+    ipcidr:
+      - 240.0.0.0/4
+proxy-providers:
+  xxxprovider:
+    type: http
+    path: ./xxx.yaml
+    url: https://xxx/xxx.yaml
+    interval: 36000
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 3600
+proxy-groups:
+  -
+    name: 🐼自动切换
+    type: url-test
+    use:
+      - xxxprovider
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 3600
+  -
+    name: 🍉手动切换
+    type: select
+    use:
+      - xxxprovider
+  -
+    name: 🔰国外流量
+    type: select
+    proxies:
+      - 🐼自动切换
+      - 🍉手动切换
+      - DIRECT
+  -
+    name: ⚓️国外应用
+    type: select
+    proxies:
+      - 🔰国外流量
+      - 🐼自动切换
+      - 🍉手动切换
+      - DIRECT
+  -
+    name: ✈️Telegram
+    type: select
+    proxies:
+      - 🔰国外流量
+      - 🐼自动切换
+      - 🍉手动切换
+      - DIRECT
+  -
+    name: 🎬国外流媒体
+    type: select
+    proxies:
+      - 🔰国外流量
+      - 🐼自动切换
+      - 🍉手动切换
+      - DIRECT
+  -
+    name: 🎬Netflix
+    type: select
+    proxies:
+      - 🔰国外流量
+      - 🐼自动切换
+      - 🍉手动切换
+      - DIRECT
+  -
+    name: 🎬国内流媒体
+    type: select
+    proxies:
+      - DIRECT
+      - 🐼自动切换
+      - 🍉手动切换
+      - 🔰国外流量
+  -
+    name: 🏠墙内应用
+    type: select
+    proxies:
+      - DIRECT
+      - 🐼自动切换
+      - 🍉手动切换
+      - 🔰国外流量
+  -
+    name: 🍎苹果服务
+    type: select
+    proxies:
+      - DIRECT
+      - 🐼自动切换
+      - 🍉手动切换
+      - 🔰国外流量
+  -
+    name: 📢广告
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+      - 🔰国外流量
+      - 🐼自动切换
+      - 🍉手动切换
+
+rule-providers:
+  Unbreak:
+    type: http
+    behavior: classical
+    path: ./ruleset/unbreak.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/unbreak.yaml
+    interval: 86400
+
+  Local:
+    type: http
+    behavior: classical
+    path: ./RuleSet/local.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/local.yaml
+    interval: 86400
+
+  StreamingChina:
+    type: http
+    behavior: classical
+    path: ./ruleset/stream-media-china.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/stream-media-china.yaml
+    interval: 86400
+
+  StreamingGlobal:
+    type: http
+    behavior: classical
+    path: ./ruleset/stream-media-global.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/stream-media-global.yaml
+    interval: 86400
+
+  Netflix:
+    type: http
+    behavior: classical
+    path: ./ruleset/netflix.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/netflix.yaml
+    interval: 86400
+
+  Telegram:
+    type: http
+    behavior: classical
+    path: ./ruleset/telegram.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/telegram.yaml
+    interval: 86400
+
+  Global:
+    type: http
+    behavior: classical
+    path: ./ruleset/global.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/global.yaml
+    interval: 86400
+
+  Apple:
+    type: http
+    behavior: classical
+    path: ./ruleset/apple.yaml
+    url: https://raw.githubusercontent.com/Angboo/clash-config/master/ruleset/apple.yaml
+    interval: 86400
+
+  ChinaIP:
+    type: http
+    behavior: ipcidr
+    path: ./ruleset/ChinaIP.yaml
+    url: https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/Extra/ChinaIP.yaml
+    interval: 86400
+
+  Advertising:
+    type: http
+    behavior: domain
+    url: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt
+    path: ./ruleset/ad.yaml
+    interval: 86400
+rules:
+  # (Local)
+  - RULE-SET,Local,DIRECT
+
+  # Unbreak
+  - RULE-SET,Unbreak,🏠墙内应用
+
+  # (Streaming Media China)
+  - RULE-SET,StreamingChina,🎬国内流媒体
+
+  # (Streaming Media Global)
+  - RULE-SET,StreamingGlobal,🎬国外流媒体
+
+  # (Netflix)
+  - RULE-SET,Netflix,🎬Netflix
+
+  # (Telegram)
+  - RULE-SET,Netflix,✈️Telegram
+
+  # (Global)
+  - RULE-SET,Global,⚓️国外应用
+
+  # (Apple)
+  - RULE-SET,Apple,🍎苹果服务
+
+  # (ChinaIP)
+  - RULE-SET,ChinaIP,🏠墙内应用
+
+  # (Advertising)
+  - RULE-SET,Advertising,📢广告
